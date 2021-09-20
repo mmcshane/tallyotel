@@ -53,23 +53,7 @@ var (
 		5 * time.Second,
 	}
 
-	defaultValueBuckets = tally.ValueBuckets{
-		defaultDurationBuckets[0].Seconds(),
-		defaultDurationBuckets[1].Seconds(),
-		defaultDurationBuckets[2].Seconds(),
-		defaultDurationBuckets[3].Seconds(),
-		defaultDurationBuckets[4].Seconds(),
-		defaultDurationBuckets[5].Seconds(),
-		defaultDurationBuckets[6].Seconds(),
-		defaultDurationBuckets[7].Seconds(),
-		defaultDurationBuckets[8].Seconds(),
-		defaultDurationBuckets[9].Seconds(),
-		defaultDurationBuckets[10].Seconds(),
-		defaultDurationBuckets[11].Seconds(),
-		defaultDurationBuckets[12].Seconds(),
-		defaultDurationBuckets[13].Seconds(),
-		defaultDurationBuckets[14].Seconds(),
-	}
+	defaultValueBuckets = tally.ValueBuckets(defaultDurationBuckets.AsValues())
 )
 
 // DefaultBucketer is a HistogramBucketer that gives a hardcoded set of default
