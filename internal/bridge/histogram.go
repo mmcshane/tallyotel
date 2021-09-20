@@ -15,6 +15,8 @@ import (
 type (
 	histRecorder func(tally.Histogram, number.Number, number.Kind)
 
+	// Histogram is a metric.SyncImpl implementation that bridges between an
+	// OTEL Histogram and a Tally Histogram.
 	Histogram struct {
 		desc      metric.Descriptor
 		baseScope tally.Scope
@@ -25,6 +27,8 @@ type (
 		defaultHist tally.Histogram
 	}
 
+	// BoundHistogram is a Histogram that has been bound to a set of
+	// attribute.KeyValue labels.
 	BoundHistogram struct {
 		desc   metric.Descriptor
 		hist   tally.Histogram
@@ -32,14 +36,16 @@ type (
 	}
 )
 
+// NewHistogram instantiates a new Histogram that uses the proved scope and
+// bucket configuration.
 func NewHistogram(
 	desc metric.Descriptor,
 	scope tally.Scope,
 	buckets tally.Buckets,
 ) *Histogram {
-	recorder := RecordFloat64
+	recorder := recordFloat64
 	if desc.Unit() == unit.Milliseconds {
-		recorder = RecordMilliseconds
+		recorder = recordMilliseconds
 	}
 	return &Histogram{
 		desc:      desc,
@@ -49,14 +55,19 @@ func NewHistogram(
 	}
 }
 
+// Implementation is unused
 func (h *Histogram) Implementation() interface{} {
 	return nil
 }
 
+// Descriptor observes this Histogram's Descriptor object
 func (h *Histogram) Descriptor() metric.Descriptor {
 	return h.desc
 }
 
+// Bind transforms this Histogram into a BoundHistogram, embedding the provided
+// labels. A new scope is created from the base scope initially provided at
+// construction time.
 func (h *Histogram) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
 	newScope := h.baseScope.Tagged(KVsToTags(labels))
 	return &BoundHistogram{
@@ -66,6 +77,7 @@ func (h *Histogram) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
 	}
 }
 
+// RecordOne adds a value to this histogram.
 func (h *Histogram) RecordOne(
 	ctx context.Context,
 	n number.Number,
@@ -86,6 +98,8 @@ func (h *Histogram) recordToDefault(n number.Number) {
 	h.record(h.defaultHist, n, h.desc.NumberKind())
 }
 
+// RecordOneInScope is used to record a value when the scope can be provided by
+// the caller. This is only known to be the case during Meter batch recordings.
 func (h *Histogram) RecordOneInScope(
 	ctx context.Context,
 	scope tally.Scope,
@@ -98,19 +112,19 @@ func (h *Histogram) RecordOneInScope(
 	h.record(scope.Histogram(h.desc.Name(), h.buckets), n, h.desc.NumberKind())
 }
 
+// RecordOne adds a value to this BoundHistogram.
 func (h *BoundHistogram) RecordOne(ctx context.Context, n number.Number) {
 	h.record(h.hist, n, h.desc.NumberKind())
 }
 
-func (c *BoundHistogram) Unbind() {
-	panic("not implemented")
-}
+// Unbind is a no op. It's not clear what it is supposed to do.
+func (h *BoundHistogram) Unbind() {}
 
-func RecordFloat64(hist tally.Histogram, n number.Number, k number.Kind) {
+func recordFloat64(hist tally.Histogram, n number.Number, k number.Kind) {
 	hist.RecordValue(n.CoerceToFloat64(k))
 }
 
-func RecordMilliseconds(hist tally.Histogram, n number.Number, k number.Kind) {
+func recordMilliseconds(hist tally.Histogram, n number.Number, k number.Kind) {
 	dur := time.Duration(n.CoerceToFloat64(k) * float64(time.Millisecond))
 	hist.RecordDuration(dur)
 }

@@ -66,12 +66,12 @@ func TestUnsupported(t *testing.T) {
 		number.Int64Kind,
 	), nil)
 	// none of the async instruments are supported
-	require.ErrorIs(t, err, bridge.UnsupportedInstrumentError)
+	require.ErrorIs(t, err, bridge.ErrorUnsupportedInstrument)
 
 	_, err = m.NewSyncInstrument(metric.NewDescriptor(
 		"name",
 		sdkapi.CounterInstrumentKind,
 		number.Float64Kind, // only integer histograms are supported
 	))
-	require.ErrorIs(t, err, bridge.UnsupportedInstrumentError)
+	require.ErrorIs(t, err, bridge.ErrorUnsupportedInstrument)
 }

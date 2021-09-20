@@ -12,6 +12,7 @@ import (
 )
 
 type (
+	// Counter implements the metric.SyncImpl interface wrapping a tally.Counter
 	Counter struct {
 		desc      metric.Descriptor
 		baseScope tally.Scope
@@ -20,24 +21,33 @@ type (
 		defaultCtr  tally.Counter
 	}
 
+	// BoundCounter implements the metric.BoundSyncImpl interface wrapping a
+	// tally.Counter
 	BoundCounter struct {
 		desc metric.Descriptor
 		ctr  tally.Counter
 	}
 )
 
+// NewCounter instantiates a new Counter that uses the provided scope as its
+// base scope.
 func NewCounter(desc metric.Descriptor, scope tally.Scope) *Counter {
 	return &Counter{desc: desc, baseScope: scope}
 }
 
+// Implementation is unused
 func (c *Counter) Implementation() interface{} {
 	return nil
 }
 
+// Descriptor observes this Counter's Descriptor object
 func (c *Counter) Descriptor() metric.Descriptor {
 	return c.desc
 }
 
+// Bind transforms this Counter into a BoundCounter, embedding the provided
+// labels. A new scope is created from the base scope initially provided at
+// construction time.
 func (c *Counter) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
 	newScope := c.baseScope.Tagged(KVsToTags(labels))
 	return &BoundCounter{
@@ -46,6 +56,9 @@ func (c *Counter) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
 	}
 }
 
+// RecordOne increments this counter by the provided value. If this Counter is
+// configured to be an UpDownCounter then negative values are allowed, otherwise
+// the implementation panics if a negative value is passed here.
 func (c *Counter) RecordOne(
 	ctx context.Context,
 	n number.Number,
@@ -68,6 +81,8 @@ func (c *Counter) recordValidValueToDefault(valid int64) {
 	c.defaultCtr.Inc(valid)
 }
 
+// RecordOneInScope is used to record a value when the scope can be provided by
+// the caller. This is only known to be the case during Meter batch recordings.
 func (c *Counter) RecordOneInScope(
 	ctx context.Context,
 	scope tally.Scope,
@@ -82,14 +97,16 @@ func (c *Counter) RecordOneInScope(
 	scope.Counter(c.desc.Name()).Inc(value)
 }
 
+// RecordOne records a value into this BoundCounter. If the instrument type is
+// an UpDownCounter then negative values are allowed here, otherwise negative
+// values will cause a panic.
 func (c *BoundCounter) RecordOne(ctx context.Context, n number.Number) {
 	validateInt64(c.desc.InstrumentKind(), n.AsInt64())
 	c.ctr.Inc(int64(n))
 }
 
-func (c *BoundCounter) Unbind() {
-	panic("not implemented")
-}
+// Unbind is a no op. It's not clear what it is supposed to do.
+func (c *BoundCounter) Unbind() {}
 
 func validateInt64(kind sdkapi.InstrumentKind, value int64) {
 	if kind.Monotonic() && value < 0 {
