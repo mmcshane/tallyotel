@@ -9,23 +9,6 @@ import (
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
-type (
-	// Opt is the type for optional arguments to a MeterProvider.
-	Opt func(*MeterProvider)
-
-	// HistogramBucketer maps metric metadata to a tally.Buckets instance. This
-	// is necessary because OTEL does not have a way to indicate bucket
-	// confguration at histogram creation time.
-	HistogramBucketer func(metric.Descriptor) tally.Buckets
-
-	// MeterProvider is an implementation of metric.Meterprovider wrapping a
-	// tally.Scope.
-	MeterProvider struct {
-		scope   tally.Scope
-		buckets HistogramBucketer
-	}
-)
-
 var (
 
 	// These are copied from the tally codebase. There's a bug in Tally where if
@@ -56,6 +39,40 @@ var (
 	defaultValueBuckets = tally.ValueBuckets(defaultDurationBuckets.AsValues())
 )
 
+type (
+	// Opt is the type for optional arguments to a MeterProvider.
+	Opt func(*MeterProvider)
+
+	// HistogramBucketer maps metric metadata to a tally.Buckets instance. This
+	// is necessary because OTEL does not have a way to indicate bucket
+	// confguration at histogram creation time.
+	HistogramBucketer func(metric.Descriptor) tally.Buckets
+
+	// MeterScoper is a factory for scopes to be used in a Meter given a meter
+	// name and a base scope.
+	MeterScoper func(meterName string, baseScope tally.Scope) tally.Scope
+
+	// MeterProvider is an implementation of metric.Meterprovider wrapping a
+	// tally.Scope.
+	MeterProvider struct {
+		scope       tally.Scope
+		buckets     HistogramBucketer
+		meterScoper MeterScoper
+	}
+)
+
+func defaultMeterScoper(name string, base tally.Scope) tally.Scope {
+	return base.SubScope(name)
+}
+
+// WithMeterScoper provides a MeterScoper to a MeterProvider at construction
+// time
+func WithMeterScoper(f MeterScoper) Opt {
+	return func(mp *MeterProvider) {
+		mp.meterScoper = f
+	}
+}
+
 // DefaultBucketer is a HistogramBucketer that gives a hardcoded set of default
 // buckets.
 func DefaultBucketer(desc metric.Descriptor) tally.Buckets {
@@ -77,8 +94,9 @@ func WithHistogramBucketer(f HistogramBucketer) Opt {
 // tally.Scope.
 func NewMeterProvider(scope tally.Scope, opts ...Opt) metric.MeterProvider {
 	mp := &MeterProvider{
-		scope:   scope,
-		buckets: DefaultBucketer,
+		scope:       scope,
+		buckets:     DefaultBucketer,
+		meterScoper: defaultMeterScoper,
 	}
 	for _, opt := range opts {
 		opt(mp)
@@ -94,7 +112,7 @@ func (p *MeterProvider) Meter(
 	opts ...metric.MeterOption,
 ) metric.Meter {
 	impl := &MeterImpl{
-		scope:   p.scope.SubScope(instrumentationName),
+		scope:   p.meterScoper(instrumentationName, p.scope),
 		buckets: p.buckets,
 	}
 	return metric.WrapMeterImpl(

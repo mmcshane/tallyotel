@@ -15,12 +15,20 @@ type (
 	// bucketization strategies for histograms based on the information in the
 	// histogram's metric.Descriptor.
 	HistogramBucketer = bridge.HistogramBucketer
+
+	// MeterScoper allows clients to override the default behavior of creating a
+	// named Tally sub-scope for each Meter.
+	MeterScoper = bridge.MeterScoper
 )
 
 var (
 	// WithHistogramBucketer wraps a HistogramBucketer into a tallyotel Opt so
 	// that it can be passed in to a MeterProvider.
 	WithHistogramBucketer = bridge.WithHistogramBucketer
+
+	// WithMeterScoper wraps a MeterScoper into a tallyotel Opt so that it can
+	// be passed in to a a MeterProvider.
+	WithMeterScoper = bridge.WithMeterScoper
 
 	// DefaultBucketer returns the default histogram buckets. It is exposed here
 	// for use as a fallback bucketing strategy within a custom
