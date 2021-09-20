@@ -7,7 +7,7 @@ import (
 
 	"github.com/mmcshane/tallyotel/internal/bridge"
 	"github.com/stretchr/testify/require"
-	"github.com/uber-go/tally"
+	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"

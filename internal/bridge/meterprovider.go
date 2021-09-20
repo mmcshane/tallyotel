@@ -3,7 +3,7 @@ package bridge
 import (
 	"time"
 
-	"github.com/uber-go/tally"
+	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/registry"
 	"go.opentelemetry.io/otel/metric/unit"

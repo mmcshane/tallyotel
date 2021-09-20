@@ -2,7 +2,7 @@ package tallyotel
 
 import (
 	"github.com/mmcshane/tallyotel/internal/bridge"
-	"github.com/uber-go/tally"
+	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel/metric"
 )
 

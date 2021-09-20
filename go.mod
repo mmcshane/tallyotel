@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/stretchr/testify v1.7.0
-	github.com/uber-go/tally v3.4.2+incompatible
+	github.com/uber-go/tally/v4 v4.0.1
 	go.opentelemetry.io/otel v1.0.0-RC3
 	go.opentelemetry.io/otel/metric v0.23.0
 )
