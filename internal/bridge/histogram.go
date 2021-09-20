@@ -13,12 +13,12 @@ import (
 )
 
 type (
-	HistRecorder func(tally.Histogram, number.Number)
+	histRecorder func(tally.Histogram, number.Number, number.Kind)
 
 	Histogram struct {
 		desc      metric.Descriptor
 		baseScope tally.Scope
-		record    HistRecorder
+		record    histRecorder
 		buckets   tally.Buckets
 
 		initDefault sync.Once
@@ -28,7 +28,7 @@ type (
 	BoundHistogram struct {
 		desc   metric.Descriptor
 		hist   tally.Histogram
-		record HistRecorder
+		record histRecorder
 	}
 )
 
@@ -76,14 +76,14 @@ func (h *Histogram) RecordOne(
 		return
 	}
 	s := h.baseScope.Tagged(KVsToTags(labels))
-	h.record(s.Histogram(h.desc.Name(), h.buckets), n)
+	h.record(s.Histogram(h.desc.Name(), h.buckets), n, h.desc.NumberKind())
 }
 
 func (h *Histogram) recordToDefault(n number.Number) {
 	h.initDefault.Do(func() {
 		h.defaultHist = h.baseScope.Histogram(h.desc.Name(), h.buckets)
 	})
-	h.record(h.defaultHist, n)
+	h.record(h.defaultHist, n, h.desc.NumberKind())
 }
 
 func (h *Histogram) RecordOneInScope(
@@ -95,22 +95,22 @@ func (h *Histogram) RecordOneInScope(
 		h.recordToDefault(n)
 		return
 	}
-	h.record(scope.Histogram(h.desc.Name(), h.buckets), n)
+	h.record(scope.Histogram(h.desc.Name(), h.buckets), n, h.desc.NumberKind())
 }
 
 func (h *BoundHistogram) RecordOne(ctx context.Context, n number.Number) {
-	h.record(h.hist, n)
+	h.record(h.hist, n, h.desc.NumberKind())
 }
 
 func (c *BoundHistogram) Unbind() {
 	panic("not implemented")
 }
 
-func RecordFloat64(hist tally.Histogram, n number.Number) {
-	hist.RecordValue(n.AsFloat64())
+func RecordFloat64(hist tally.Histogram, n number.Number, k number.Kind) {
+	hist.RecordValue(n.CoerceToFloat64(k))
 }
 
-func RecordMilliseconds(hist tally.Histogram, n number.Number) {
-	dur := time.Duration(n.AsFloat64() * float64(time.Millisecond))
+func RecordMilliseconds(hist tally.Histogram, n number.Number, k number.Kind) {
+	dur := time.Duration(n.CoerceToFloat64(k) * float64(time.Millisecond))
 	hist.RecordDuration(dur)
 }

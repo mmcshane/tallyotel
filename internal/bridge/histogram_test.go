@@ -41,6 +41,30 @@ func TestF64Histogram(t *testing.T) {
 	require.EqualValues(t, 3, vals[4.0])
 }
 
+func TestInt64Histogram(t *testing.T) {
+	scope := tally.NewTestScope("scope", nil)
+	hist := bridge.NewHistogram(
+		metric.NewDescriptor(
+			"h",
+			sdkapi.HistogramInstrumentKind,
+			number.Int64Kind),
+		scope,
+		tally.MustMakeLinearValueBuckets(0.5, 1.0, 5))
+
+	hist.RecordOne(context.TODO(), number.NewInt64Number(1), nil)
+	hist.RecordOne(context.TODO(), number.NewInt64Number(2), nil)
+	hist.RecordOne(context.TODO(), number.NewInt64Number(3), nil)
+	hist.RecordOne(context.TODO(), number.NewInt64Number(3), nil)
+
+	snap, ok := scope.Snapshot().Histograms()["scope.h+"]
+	require.True(t, ok)
+	vals := snap.Values()
+	require.EqualValues(t, 0, vals[0.5])
+	require.EqualValues(t, 1, vals[1.5])
+	require.EqualValues(t, 1, vals[2.5])
+	require.EqualValues(t, 2, vals[3.5])
+}
+
 func TestDurationHistogram(t *testing.T) {
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
