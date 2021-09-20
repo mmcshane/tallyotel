@@ -15,6 +15,34 @@ import (
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
+/*
+func TestTallyIsBusted(t *testing.T) {
+	scope := tally.NewTestScope("scope", nil)
+	h := scope.Histogram("foo", nil)
+
+	h.RecordValue(0.33)
+
+	snap, ok := scope.Snapshot().Histograms()["scope.foo+"]
+	require.True(t, ok)
+	vals := snap.Values()
+	require.Greater(t, len(vals), 0, "we recorded a value, where did it go?")
+}
+*/
+
+func TestInt64HistToFloat(t *testing.T) {
+	scope := tally.NewTestScope("scope", nil)
+	mp := bridge.NewMeterProvider(scope)
+	m := metric.Must(mp.Meter("m"))
+	hist := m.NewInt64Histogram("h1")
+
+	hist.Record(context.TODO(), 3)
+
+	snap, ok := scope.Snapshot().Histograms()["scope.m.h1+"]
+	require.True(t, ok)
+	vals := snap.Values()
+	require.EqualValues(t, 1, vals[5.0])
+}
+
 func TestF64Histogram(t *testing.T) {
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(

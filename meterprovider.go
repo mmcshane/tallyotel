@@ -21,6 +21,11 @@ var (
 	// WithHistogramBucketer wraps a HistogramBucketer into a tallyotel Opt so
 	// that it can be passed in to a MeterProvider.
 	WithHistogramBucketer = bridge.WithHistogramBucketer
+
+	// DefaultBucketer returns the default histogram buckets. It is exposed here
+	// for use as a fallback bucketing strategy within a custom
+	// HistogramBucketer.
+	DefaultBucketer = bridge.DefaultBucketer
 )
 
 // NewMeterProvider instantiates a tallyotel bridge metric.MeterProvider that
