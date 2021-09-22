@@ -7,6 +7,9 @@ A [Tally](https://github.com/uber-go/tally)/[Open
 Telemetry](https://github.com/open-telemetry/opentelemetry-go) bridge allowing
 for code using Open Telemetry instruments to emit metrics with Tally.
 
+A demonstration of emitting metrics from Open Telemetry instruments through
+Tally to Prometheus can be found at https://github.com/mmcshane/tallyotel-demo.
+
 As Tally contains abstractions for exporting metrics and Open Telemetry _also_
 contains abstractions for exporting metrics, the use of this particular bridge
 library is likely to be a transient period for any given codebase. If your code
@@ -42,10 +45,12 @@ predictable way. Here are the rules for how scopes are used within `tallyotel`.
    construction time. Users can use this scope to make Tally-specific
    configurations to the metrics supplied by the `metric.Meter`(s) derived from
    a given top-level `tallyotel.MeterProvider`
-1. Every `metric.Meter` created by a `tallyotel.MeterProvider` has a single
-   scope which is a sub-scope (see `tally.Scope.SubScope`) of the parent
-   `tallyotel.MeterProvider`'s scope using the `Meter`'s name as the sub-scope
-   name.
+1. Every `metric.Meter` created by a `tallyotel.MeterProvider` uses the provided
+   Meter name to build a set of nested sub-scopes (see `tally.Scope.SubScope`)
+   of the parent `tallyotel.MeterProvider`'s scope. Sub-scopes are implied
+   through the Meter name via a separator string (by default: `"."`). The exact
+   behavior here can be modified through a client-provided
+   `tallyotel.MeterScoper`.
 1. Unbound instruments created by a `metric.Meter` and invoked without any
    `attribute.KeyValue`s use their parent `metric.Meter`'s scope
 1. Bound instruments and unbound instruments invoked with `attribute.KeyValue`s

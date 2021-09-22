@@ -1,6 +1,7 @@
 package bridge
 
 import (
+	"strings"
 	"time"
 
 	tally "github.com/uber-go/tally/v4"
@@ -50,7 +51,7 @@ type (
 
 	// MeterScoper is a factory for scopes to be used in a Meter given a meter
 	// name and a base scope.
-	MeterScoper func(meterName string, baseScope tally.Scope) tally.Scope
+	MeterScoper func(meterName, sep string, baseScope tally.Scope) tally.Scope
 
 	// MeterProvider is an implementation of metric.Meterprovider wrapping a
 	// tally.Scope.
@@ -58,11 +59,24 @@ type (
 		scope       tally.Scope
 		buckets     HistogramBucketer
 		meterScoper MeterScoper
+		separator   string
 	}
 )
 
-func defaultMeterScoper(name string, base tally.Scope) tally.Scope {
-	return base.SubScope(name)
+func defaultMeterScoper(name, sep string, base tally.Scope) tally.Scope {
+	scope := base
+	for _, name := range strings.Split(strings.Trim(name, sep), sep) {
+		scope = scope.SubScope(name)
+	}
+	return scope
+}
+
+// WithScopeNameSeparator provides a string to a MeterProvider at construction
+// time to be used in splitting child Meter names into scope names.
+func WithScopeNameSeparator(s string) Opt {
+	return func(mp *MeterProvider) {
+		mp.separator = s
+	}
 }
 
 // WithMeterScoper provides a MeterScoper to a MeterProvider at construction
@@ -97,6 +111,7 @@ func NewMeterProvider(scope tally.Scope, opts ...Opt) metric.MeterProvider {
 		scope:       scope,
 		buckets:     DefaultBucketer,
 		meterScoper: defaultMeterScoper,
+		separator:   tally.DefaultSeparator,
 	}
 	for _, opt := range opts {
 		opt(mp)
@@ -112,7 +127,7 @@ func (p *MeterProvider) Meter(
 	opts ...metric.MeterOption,
 ) metric.Meter {
 	impl := &MeterImpl{
-		scope:   p.meterScoper(instrumentationName, p.scope),
+		scope:   p.meterScoper(instrumentationName, p.separator, p.scope),
 		buckets: p.buckets,
 	}
 	return metric.WrapMeterImpl(

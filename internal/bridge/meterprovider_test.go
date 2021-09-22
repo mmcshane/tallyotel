@@ -13,7 +13,7 @@ import (
 func TestMeterReuseProviderScope(t *testing.T) {
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
-		func(name string, base tally.Scope) tally.Scope {
+		func(name, sep string, base tally.Scope) tally.Scope {
 			return base
 		}))
 	m := metric.Must(mp.Meter("meter"))
@@ -30,7 +30,7 @@ func TestMeterReuseProviderScope(t *testing.T) {
 func TestSTandardMeterNamingDoubleScope(t *testing.T) {
 	scope := tally.NewTestScope("", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
-		func(name string, base tally.Scope) tally.Scope {
+		func(name, sep string, base tally.Scope) tally.Scope {
 			return base.SubScope("x").SubScope("y")
 		}))
 	m := metric.Must(mp.Meter("meter"))
@@ -41,7 +41,7 @@ func TestSTandardMeterNamingDoubleScope(t *testing.T) {
 	require.True(t, ok, "counter name should be x.y.c")
 }
 
-func TestSTandardMeterNaming(t *testing.T) {
+func TestStandardMeterNaming(t *testing.T) {
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope)
 	m := metric.Must(mp.Meter("meter"))
@@ -50,4 +50,15 @@ func TestSTandardMeterNaming(t *testing.T) {
 
 	_, ok := ctrSnaps["base.meter.c+"]
 	require.True(t, ok, "counter name should be base.meter.c")
+}
+
+func TestMeterNameSplitting(t *testing.T) {
+	scope := tally.NewTestScope("base", nil)
+	mp := bridge.NewMeterProvider(scope, bridge.WithScopeNameSeparator("@"))
+	m := metric.Must(mp.Meter("@foo@bar@baz@@@"))
+	m.NewInt64Counter("c").Add(context.TODO(), 1)
+	ctrSnaps := scope.Snapshot().Counters()
+
+	_, ok := ctrSnaps["base.foo.bar.baz.c+"]
+	require.True(t, ok, "counter name should be base.foo.bar.baz.c")
 }

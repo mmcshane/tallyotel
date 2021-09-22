@@ -34,6 +34,10 @@ var (
 	// for use as a fallback bucketing strategy within a custom
 	// HistogramBucketer.
 	DefaultBucketer = bridge.DefaultBucketer
+
+	// WithSeparator provides a string to a MeterProvider at construction time to be
+	// used in splitting child Meter names into scope names.
+	WithScopeNameSeparator = bridge.WithScopeNameSeparator
 )
 
 // NewMeterProvider instantiates a tallyotel bridge metric.MeterProvider that
