@@ -2,14 +2,19 @@ package bridge
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"sync"
 
 	tally "github.com/uber-go/tally/v4"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"
 	"go.opentelemetry.io/otel/metric/sdkapi"
 )
+
+var ErrorNonMonotonicValue = errors.New("unexpected non-monotonic value")
 
 type (
 	// Counter implements the metric.SyncImpl interface wrapping a tally.Counter
@@ -57,15 +62,17 @@ func (c *Counter) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
 }
 
 // RecordOne increments this counter by the provided value. If this Counter is
-// configured to be an UpDownCounter then negative values are allowed, otherwise
-// the implementation panics if a negative value is passed here.
+// configured to be an UpDownCounter then negative values are allowed.
 func (c *Counter) RecordOne(
 	ctx context.Context,
 	n number.Number,
 	labels []attribute.KeyValue,
 ) {
 	value := n.AsInt64()
-	validateInt64(c.desc.InstrumentKind(), value)
+	if err := validateInt64(c.desc.InstrumentKind(), value); err != nil {
+		otel.Handle(err)
+		return
+	}
 	if len(labels) == 0 {
 		c.recordValidValueToDefault(value)
 		return
@@ -89,7 +96,10 @@ func (c *Counter) RecordOneInScope(
 	n number.Number,
 ) {
 	value := n.AsInt64()
-	validateInt64(c.desc.InstrumentKind(), value)
+	if err := validateInt64(c.desc.InstrumentKind(), n.AsInt64()); err != nil {
+		otel.Handle(err)
+		return
+	}
 	if scope == c.baseScope {
 		c.recordValidValueToDefault(value)
 		return
@@ -98,18 +108,21 @@ func (c *Counter) RecordOneInScope(
 }
 
 // RecordOne records a value into this BoundCounter. If the instrument type is
-// an UpDownCounter then negative values are allowed here, otherwise negative
-// values will cause a panic.
+// an UpDownCounter then negative values are allowed here.
 func (c *BoundCounter) RecordOne(ctx context.Context, n number.Number) {
-	validateInt64(c.desc.InstrumentKind(), n.AsInt64())
+	if err := validateInt64(c.desc.InstrumentKind(), n.AsInt64()); err != nil {
+		otel.Handle(err)
+		return
+	}
 	c.ctr.Inc(int64(n))
 }
 
 // Unbind is a no op. It's not clear what it is supposed to do.
 func (c *BoundCounter) Unbind() {}
 
-func validateInt64(kind sdkapi.InstrumentKind, value int64) {
+func validateInt64(kind sdkapi.InstrumentKind, value int64) error {
 	if kind.Monotonic() && value < 0 {
-		panic("Monotonic counter incremented by a negative number")
+		return fmt.Errorf("%w: %v", ErrorNonMonotonicValue, value)
 	}
+	return nil
 }
