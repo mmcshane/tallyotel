@@ -27,6 +27,20 @@ func TestMeterReuseProviderScope(t *testing.T) {
 	require.True(t, ok, "counter name should be base.c")
 }
 
+func TestSTandardMeterNamingDoubleScope(t *testing.T) {
+	scope := tally.NewTestScope("", nil)
+	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
+		func(name string, base tally.Scope) tally.Scope {
+			return base.SubScope("x").SubScope("y")
+		}))
+	m := metric.Must(mp.Meter("meter"))
+	m.NewInt64Counter("c").Add(context.TODO(), 1)
+	ctrSnaps := scope.Snapshot().Counters()
+
+	_, ok := ctrSnaps["x.y.c+"]
+	require.True(t, ok, "counter name should be x.y.c")
+}
+
 func TestSTandardMeterNaming(t *testing.T) {
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope)
