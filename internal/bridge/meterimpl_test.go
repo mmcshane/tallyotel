@@ -41,9 +41,17 @@ func TestBatchRecord(t *testing.T) {
 			meter := prov.Meter("meter")
 			ctr := metric.Must(meter).NewInt64Counter("a")
 			hist := metric.Must(meter).NewFloat64Histogram("h")
-			meter.RecordBatch(context.TODO(), tt.labels,
-				ctr.Measurement(4),
-				hist.Measurement(1.5))
+
+			var batchErrs []error
+			withOTELErrorHandler(captureInto(&batchErrs), func() {
+				meter.RecordBatch(context.TODO(), tt.labels,
+					ctr.Measurement(4),
+					ctr.Measurement(-1), // non-monotonic, should error
+					hist.Measurement(1.5))
+			})
+
+			require.Len(t, batchErrs, 1)
+			require.ErrorIs(t, batchErrs[0], bridge.ErrorNonMonotonicValue)
 
 			snap := scope.Snapshot()
 

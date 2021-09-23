@@ -7,7 +7,6 @@ import (
 	"github.com/mmcshane/tallyotel/internal/bridge"
 	"github.com/stretchr/testify/require"
 	tally "github.com/uber-go/tally/v4"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"
@@ -25,15 +24,14 @@ func testCounter(
 	return tscope, bctr
 }
 
-var panicHandler otel.ErrorHandlerFunc = func(err error) { panic(err.Error()) }
-
 func TestIncrOnlyCounter(t *testing.T) {
 	scope, ctr := testCounter("scope", "ctr", sdkapi.CounterInstrumentKind)
-	otel.SetErrorHandler(panicHandler)
 
-	require.Panics(t, func() {
-		ctr.RecordOne(context.TODO(), number.NewInt64Number(-1), nil)
-	}, "otel counter instruments are increment-only")
+	withOTELErrorHandler(panicHandler, func() {
+		require.Panics(t, func() {
+			ctr.RecordOne(context.TODO(), number.NewInt64Number(-1), nil)
+		}, "otel counter instruments are monotonic")
+	})
 
 	ctr.RecordOne(context.TODO(), number.NewInt64Number(1), nil)
 
@@ -59,11 +57,12 @@ func TestTaggedRecord(t *testing.T) {
 func TestBoundCounter(t *testing.T) {
 	scope, unbound := testCounter("scope", "ctr", sdkapi.CounterInstrumentKind)
 	ctr := unbound.Bind([]attribute.KeyValue{attribute.Key("foo").String("bar")})
-	otel.SetErrorHandler(panicHandler)
 
-	require.Panics(t, func() {
-		ctr.RecordOne(context.TODO(), number.NewInt64Number(-1))
-	}, "otel counter instruments are increment-only")
+	withOTELErrorHandler(panicHandler, func() {
+		require.Panics(t, func() {
+			ctr.RecordOne(context.TODO(), number.NewInt64Number(-1))
+		}, "otel counter instruments are monotonic")
+	})
 
 	ctr.RecordOne(context.TODO(), number.NewInt64Number(1))
 
