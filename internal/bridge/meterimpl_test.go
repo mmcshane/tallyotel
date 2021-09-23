@@ -51,7 +51,7 @@ func TestBatchRecord(t *testing.T) {
 			})
 
 			require.Len(t, batchErrs, 1)
-			require.ErrorIs(t, batchErrs[0], bridge.ErrorNonMonotonicValue)
+			require.ErrorIs(t, batchErrs[0], bridge.ErrNonMonotonicValue)
 
 			snap := scope.Snapshot()
 
@@ -74,12 +74,12 @@ func TestUnsupported(t *testing.T) {
 		number.Int64Kind,
 	), nil)
 	// none of the async instruments are supported
-	require.ErrorIs(t, err, bridge.ErrorUnsupportedInstrument)
+	require.ErrorIs(t, err, bridge.ErrUnsupportedInstrument)
 
 	_, err = m.NewSyncInstrument(metric.NewDescriptor(
 		"name",
 		sdkapi.CounterInstrumentKind,
 		number.Float64Kind, // only integer histograms are supported
 	))
-	require.ErrorIs(t, err, bridge.ErrorUnsupportedInstrument)
+	require.ErrorIs(t, err, bridge.ErrUnsupportedInstrument)
 }

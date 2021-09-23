@@ -15,7 +15,7 @@ import (
 // ErrorUnsupportedInstrument is used to signal that an instrument cannot be
 // created by a Meter because the instrument kind and number kind together are
 // not supported.
-var ErrorUnsupportedInstrument = errors.New("unsupported instrument")
+var ErrUnsupportedInstrument = errors.New("unsupported instrument")
 
 type (
 	// MeterImpl is an implementation of metric.MeterImpl that uses Tally and
@@ -75,7 +75,7 @@ func (m *MeterImpl) NewSyncInstrument(
 		return NewHistogram(desc, m.scope, m.buckets(desc)), nil
 	}
 	return nil, fmt.Errorf("%w: %v %v",
-		ErrorUnsupportedInstrument, desc.InstrumentKind(), desc.NumberKind())
+		ErrUnsupportedInstrument, desc.InstrumentKind(), desc.NumberKind())
 }
 
 // NewAsyncInstrument is required by the metric.MeterImpl interface but no
@@ -85,5 +85,5 @@ func (m *MeterImpl) NewAsyncInstrument(
 	runner metric.AsyncRunner,
 ) (metric.AsyncImpl, error) {
 	return nil, fmt.Errorf("%w: %v %v",
-		ErrorUnsupportedInstrument, desc.InstrumentKind(), desc.NumberKind())
+		ErrUnsupportedInstrument, desc.InstrumentKind(), desc.NumberKind())
 }

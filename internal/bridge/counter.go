@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/metric/sdkapi"
 )
 
-var ErrorNonMonotonicValue = errors.New("unexpected non-monotonic value")
+var ErrNonMonotonicValue = errors.New("unexpected non-monotonic value")
 
 type (
 	// Counter implements the metric.SyncImpl interface wrapping a tally.Counter
@@ -122,7 +122,7 @@ func (c *BoundCounter) Unbind() {}
 
 func validateInt64(kind sdkapi.InstrumentKind, value int64) error {
 	if kind.Monotonic() && value < 0 {
-		return fmt.Errorf("%w: %v", ErrorNonMonotonicValue, value)
+		return fmt.Errorf("%w: %v", ErrNonMonotonicValue, value)
 	}
 	return nil
 }
