@@ -6,7 +6,6 @@ import (
 
 	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/registry"
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
@@ -51,7 +50,7 @@ type (
 
 	// MeterScoper is a factory for scopes to be used in a Meter given a meter
 	// name and a base scope.
-	MeterScoper func(meterName, sep string, baseScope tally.Scope) tally.Scope
+	MeterScoper func(nameParts []string, baseScope tally.Scope) tally.Scope
 
 	// MeterProvider is an implementation of metric.Meterprovider wrapping a
 	// tally.Scope.
@@ -63,9 +62,9 @@ type (
 	}
 )
 
-func defaultMeterScoper(name, sep string, base tally.Scope) tally.Scope {
+func defaultMeterScoper(nameParts []string, base tally.Scope) tally.Scope {
 	scope := base
-	for _, name := range strings.Split(strings.Trim(name, sep), sep) {
+	for _, name := range nameParts {
 		scope = scope.SubScope(name)
 	}
 	return scope
@@ -126,11 +125,11 @@ func (p *MeterProvider) Meter(
 	instrumentationName string,
 	opts ...metric.MeterOption,
 ) metric.Meter {
+	trimmed := strings.Trim(instrumentationName, p.separator)
+	parts := strings.Split(trimmed, p.separator)
 	impl := &MeterImpl{
-		scope:   p.meterScoper(instrumentationName, p.separator, p.scope),
+		scope:   p.meterScoper(parts, p.scope),
 		buckets: p.buckets,
 	}
-	return metric.WrapMeterImpl(
-		registry.NewUniqueInstrumentMeterImpl(impl),
-		instrumentationName, opts...)
+	return metric.WrapMeterImpl(impl)
 }

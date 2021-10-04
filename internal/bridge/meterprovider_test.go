@@ -13,7 +13,7 @@ import (
 func TestMeterReuseProviderScope(t *testing.T) {
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
-		func(name, sep string, base tally.Scope) tally.Scope {
+		func(_ []string, base tally.Scope) tally.Scope {
 			return base
 		}))
 	m := metric.Must(mp.Meter("meter"))
@@ -30,7 +30,7 @@ func TestMeterReuseProviderScope(t *testing.T) {
 func TestSTandardMeterNamingDoubleScope(t *testing.T) {
 	scope := tally.NewTestScope("", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
-		func(name, sep string, base tally.Scope) tally.Scope {
+		func(_ []string, base tally.Scope) tally.Scope {
 			return base.SubScope("x").SubScope("y")
 		}))
 	m := metric.Must(mp.Meter("meter"))

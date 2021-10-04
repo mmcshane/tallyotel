@@ -49,7 +49,9 @@ func TestF64Histogram(t *testing.T) {
 		metric.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
-			number.Float64Kind),
+			number.Float64Kind,
+			"description",
+			unit.Dimensionless),
 		scope,
 		tally.MustMakeLinearValueBuckets(0.0, 1.0, 5))
 
@@ -75,7 +77,9 @@ func TestInt64Histogram(t *testing.T) {
 		metric.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
-			number.Int64Kind),
+			number.Int64Kind,
+			"description",
+			unit.Dimensionless),
 		scope,
 		tally.MustMakeLinearValueBuckets(0.5, 1.0, 5))
 
@@ -100,7 +104,8 @@ func TestDurationHistogram(t *testing.T) {
 			"h",
 			sdkapi.HistogramInstrumentKind,
 			number.Float64Kind,
-			metric.WithUnit(unit.Milliseconds)),
+			"description",
+			unit.Milliseconds),
 		scope,
 		tally.MustMakeLinearDurationBuckets(0, 1*time.Second, 5))
 
@@ -126,7 +131,9 @@ func TestBoundHistogram(t *testing.T) {
 		metric.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
-			number.Float64Kind),
+			number.Float64Kind,
+			"description",
+			unit.Dimensionless),
 		scope,
 		tally.MustMakeLinearValueBuckets(0.0, 1.0, 5))
 

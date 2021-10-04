@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"
 	"go.opentelemetry.io/otel/metric/sdkapi"
+	"go.opentelemetry.io/otel/metric/unit"
 )
 
 func key(name string, kvs []attribute.KeyValue) string {
@@ -72,6 +73,8 @@ func TestUnsupported(t *testing.T) {
 		"name",
 		sdkapi.CounterObserverInstrumentKind,
 		number.Int64Kind,
+		"description",
+		unit.Dimensionless,
 	), nil)
 	// none of the async instruments are supported
 	require.ErrorIs(t, err, bridge.ErrUnsupportedInstrument)
@@ -80,6 +83,40 @@ func TestUnsupported(t *testing.T) {
 		"name",
 		sdkapi.CounterInstrumentKind,
 		number.Float64Kind, // only integer histograms are supported
+		"description",
+		unit.Dimensionless,
 	))
 	require.ErrorIs(t, err, bridge.ErrUnsupportedInstrument)
+}
+
+func TestCounterAliasing(t *testing.T) {
+	scope := tally.NewTestScope("scope", nil)
+	m := bridge.NewMeterImpl(scope, buckets)
+	i1, err := m.NewSyncInstrument(metric.NewDescriptor(
+		"name",
+		sdkapi.CounterInstrumentKind,
+		number.Int64Kind,
+		"description",
+		unit.Dimensionless,
+	))
+	require.NoError(t, err)
+	i2, err := m.NewSyncInstrument(metric.NewDescriptor(
+		"name",
+		sdkapi.CounterInstrumentKind,
+		number.Int64Kind,
+		"description",
+		unit.Dimensionless,
+	))
+	require.NoError(t, err)
+
+	// Distinct instrument instances should write to the same underlying Tally
+	// counter
+	i1.RecordOne(context.TODO(), number.NewInt64Number(1), nil)
+	i2.RecordOne(context.TODO(), number.NewInt64Number(1), nil)
+
+	snap := scope.Snapshot()
+
+	ctrsnap, ok := snap.Counters()[key("scope.name", nil)]
+	require.True(t, ok)
+	require.EqualValues(t, 2, ctrsnap.Value())
 }

@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"
 	"go.opentelemetry.io/otel/metric/sdkapi"
+	"go.opentelemetry.io/otel/metric/unit"
 )
 
 func testCounter(
@@ -20,7 +21,7 @@ func testCounter(
 ) (tally.TestScope, *bridge.Counter) {
 	tscope := tally.NewTestScope(scope, nil)
 	bctr := bridge.NewCounter(
-		metric.NewDescriptor(ctr, kind, number.Int64Kind), tscope)
+		metric.NewDescriptor(ctr, kind, number.Int64Kind, "", unit.Dimensionless), tscope)
 	return tscope, bctr
 }
 
