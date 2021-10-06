@@ -11,6 +11,7 @@ import (
 )
 
 func TestMeterReuseProviderScope(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
 		func(_ []string, base tally.Scope) tally.Scope {
@@ -28,6 +29,7 @@ func TestMeterReuseProviderScope(t *testing.T) {
 }
 
 func TestSTandardMeterNamingDoubleScope(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithMeterScoper(
 		func(_ []string, base tally.Scope) tally.Scope {
@@ -42,6 +44,7 @@ func TestSTandardMeterNamingDoubleScope(t *testing.T) {
 }
 
 func TestStandardMeterNaming(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope)
 	m := metric.Must(mp.Meter("meter"))
@@ -53,6 +56,7 @@ func TestStandardMeterNaming(t *testing.T) {
 }
 
 func TestMeterNameSplitting(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("base", nil)
 	mp := bridge.NewMeterProvider(scope, bridge.WithScopeNameSeparator("@"))
 	m := metric.Must(mp.Meter("@foo@bar@baz@@@"))

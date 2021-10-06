@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/metric/sdkapi"
 )
 
-// ErrorUnsupportedInstrument is used to signal that an instrument cannot be
+// ErrUnsupportedInstrument is used to signal that an instrument cannot be
 // created by a Meter because the instrument kind and number kind together are
 // not supported.
 var ErrUnsupportedInstrument = errors.New("unsupported instrument")

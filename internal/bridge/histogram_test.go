@@ -30,6 +30,7 @@ func TestTallyIsBusted(t *testing.T) {
 */
 
 func TestInt64HistToFloat(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	mp := bridge.NewMeterProvider(scope)
 	m := metric.Must(mp.Meter("m"))
@@ -44,6 +45,7 @@ func TestInt64HistToFloat(t *testing.T) {
 }
 
 func TestF64Histogram(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
 		metric.NewDescriptor(
@@ -72,6 +74,7 @@ func TestF64Histogram(t *testing.T) {
 }
 
 func TestInt64Histogram(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
 		metric.NewDescriptor(
@@ -98,6 +101,7 @@ func TestInt64Histogram(t *testing.T) {
 }
 
 func TestDurationHistogram(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
 		metric.NewDescriptor(
@@ -126,6 +130,7 @@ func TestDurationHistogram(t *testing.T) {
 }
 
 func TestBoundHistogram(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
 		metric.NewDescriptor(

@@ -26,6 +26,7 @@ func testCounter(
 }
 
 func TestIncrOnlyCounter(t *testing.T) {
+	// not parallel - uses global OTEL error handler
 	scope, ctr := testCounter("scope", "ctr", sdkapi.CounterInstrumentKind)
 
 	withOTELErrorHandler(panicHandler, func() {
@@ -42,6 +43,7 @@ func TestIncrOnlyCounter(t *testing.T) {
 }
 
 func TestTaggedRecord(t *testing.T) {
+	t.Parallel()
 	scope, ctr := testCounter("scope", "ctr", sdkapi.CounterInstrumentKind)
 
 	ctr.RecordOne(context.TODO(), number.NewInt64Number(1),
@@ -56,6 +58,7 @@ func TestTaggedRecord(t *testing.T) {
 }
 
 func TestBoundCounter(t *testing.T) {
+	// not parallel - uses global error handler
 	scope, unbound := testCounter("scope", "ctr", sdkapi.CounterInstrumentKind)
 	ctr := unbound.Bind([]attribute.KeyValue{attribute.Key("foo").String("bar")})
 
@@ -76,6 +79,7 @@ func TestBoundCounter(t *testing.T) {
 }
 
 func TestUpDownCounter(t *testing.T) {
+	t.Parallel()
 	scope, ctr := testCounter("scope", "ctr", sdkapi.UpDownCounterInstrumentKind)
 
 	ctr.RecordOne(context.TODO(), number.NewInt64Number(3), nil)

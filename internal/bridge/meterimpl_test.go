@@ -68,6 +68,7 @@ func TestBatchRecord(t *testing.T) {
 }
 
 func TestUnsupported(t *testing.T) {
+	t.Parallel()
 	m := bridge.NewMeterImpl(tally.NewTestScope("scope", nil), buckets)
 	_, err := m.NewAsyncInstrument(metric.NewDescriptor(
 		"name",
@@ -90,6 +91,7 @@ func TestUnsupported(t *testing.T) {
 }
 
 func TestCounterAliasing(t *testing.T) {
+	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	m := bridge.NewMeterImpl(scope, buckets)
 	i1, err := m.NewSyncInstrument(metric.NewDescriptor(

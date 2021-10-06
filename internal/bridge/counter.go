@@ -14,6 +14,8 @@ import (
 	"go.opentelemetry.io/otel/metric/sdkapi"
 )
 
+// ErrNonMonotonicValue is a base error cause returned when a negative value is
+// added to an increase-only Counter.
 var ErrNonMonotonicValue = errors.New("unexpected non-monotonic value")
 
 type (
