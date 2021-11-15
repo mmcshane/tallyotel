@@ -13,7 +13,7 @@ type (
 
 	// HistogramBucketer is an func allowing client code to pick different
 	// bucketization strategies for histograms based on the information in the
-	// histogram's metric.Descriptor.
+	// histogram's sdkapi.Descriptor.
 	HistogramBucketer = bridge.HistogramBucketer
 
 	// MeterScoper allows clients to override the default behavior of creating a

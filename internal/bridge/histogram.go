@@ -7,18 +7,18 @@ import (
 
 	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"
+	"go.opentelemetry.io/otel/metric/sdkapi"
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
 type (
 	histRecorder func(tally.Histogram, number.Number, number.Kind)
 
-	// Histogram is a metric.SyncImpl implementation that bridges between an
+	// Histogram is a sdkapi.SyncImpl implementation that bridges between an
 	// OTEL Histogram and a Tally Histogram.
 	Histogram struct {
-		desc      metric.Descriptor
+		desc      sdkapi.Descriptor
 		baseScope tally.Scope
 		record    histRecorder
 		buckets   tally.Buckets
@@ -30,7 +30,7 @@ type (
 	// BoundHistogram is a Histogram that has been bound to a set of
 	// attribute.KeyValue labels.
 	BoundHistogram struct {
-		desc   metric.Descriptor
+		desc   sdkapi.Descriptor
 		hist   tally.Histogram
 		record histRecorder
 	}
@@ -39,7 +39,7 @@ type (
 // NewHistogram instantiates a new Histogram that uses the proved scope and
 // bucket configuration.
 func NewHistogram(
-	desc metric.Descriptor,
+	desc sdkapi.Descriptor,
 	scope tally.Scope,
 	buckets tally.Buckets,
 ) *Histogram {
@@ -61,14 +61,14 @@ func (h *Histogram) Implementation() interface{} {
 }
 
 // Descriptor observes this Histogram's Descriptor object
-func (h *Histogram) Descriptor() metric.Descriptor {
+func (h *Histogram) Descriptor() sdkapi.Descriptor {
 	return h.desc
 }
 
 // Bind transforms this Histogram into a BoundHistogram, embedding the provided
 // labels. A new scope is created from the base scope initially provided at
 // construction time.
-func (h *Histogram) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
+func (h *Histogram) Bind(labels []attribute.KeyValue) sdkapi.BoundSyncImpl {
 	newScope := h.baseScope.Tagged(KVsToTags(labels))
 	return &BoundHistogram{
 		desc:   h.desc,

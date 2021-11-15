@@ -9,7 +9,6 @@ import (
 	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/number"
 	"go.opentelemetry.io/otel/metric/sdkapi"
 )
@@ -19,26 +18,26 @@ import (
 var ErrNonMonotonicValue = errors.New("unexpected non-monotonic value")
 
 type (
-	// Counter implements the metric.SyncImpl interface wrapping a tally.Counter
+	// Counter implements the sdkapi.SyncImpl interface wrapping a tally.Counter
 	Counter struct {
-		desc      metric.Descriptor
+		desc      sdkapi.Descriptor
 		baseScope tally.Scope
 
 		initDefault sync.Once
 		defaultCtr  tally.Counter
 	}
 
-	// BoundCounter implements the metric.BoundSyncImpl interface wrapping a
+	// BoundCounter implements the sdkapi.BoundSyncImpl interface wrapping a
 	// tally.Counter
 	BoundCounter struct {
-		desc metric.Descriptor
+		desc sdkapi.Descriptor
 		ctr  tally.Counter
 	}
 )
 
 // NewCounter instantiates a new Counter that uses the provided scope as its
 // base scope.
-func NewCounter(desc metric.Descriptor, scope tally.Scope) *Counter {
+func NewCounter(desc sdkapi.Descriptor, scope tally.Scope) *Counter {
 	return &Counter{desc: desc, baseScope: scope}
 }
 
@@ -48,14 +47,14 @@ func (c *Counter) Implementation() interface{} {
 }
 
 // Descriptor observes this Counter's Descriptor object
-func (c *Counter) Descriptor() metric.Descriptor {
+func (c *Counter) Descriptor() sdkapi.Descriptor {
 	return c.desc
 }
 
 // Bind transforms this Counter into a BoundCounter, embedding the provided
 // labels. A new scope is created from the base scope initially provided at
 // construction time.
-func (c *Counter) Bind(labels []attribute.KeyValue) metric.BoundSyncImpl {
+func (c *Counter) Bind(labels []attribute.KeyValue) sdkapi.BoundSyncImpl {
 	newScope := c.baseScope.Tagged(KVsToTags(labels))
 	return &BoundCounter{
 		desc: c.desc,

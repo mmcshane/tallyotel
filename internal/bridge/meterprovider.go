@@ -6,6 +6,7 @@ import (
 
 	tally "github.com/uber-go/tally/v4"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/sdkapi"
 	"go.opentelemetry.io/otel/metric/unit"
 )
 
@@ -46,7 +47,7 @@ type (
 	// HistogramBucketer maps metric metadata to a tally.Buckets instance. This
 	// is necessary because OTEL does not have a way to indicate bucket
 	// confguration at histogram creation time.
-	HistogramBucketer func(metric.Descriptor) tally.Buckets
+	HistogramBucketer func(sdkapi.Descriptor) tally.Buckets
 
 	// MeterScoper is a factory for scopes to be used in a Meter given a meter
 	// name and a base scope.
@@ -88,7 +89,7 @@ func WithMeterScoper(f MeterScoper) Opt {
 
 // DefaultBucketer is a HistogramBucketer that gives a hardcoded set of default
 // buckets.
-func DefaultBucketer(desc metric.Descriptor) tally.Buckets {
+func DefaultBucketer(desc sdkapi.Descriptor) tally.Buckets {
 	if desc.Unit() == unit.Milliseconds {
 		return append(tally.DurationBuckets(nil), defaultDurationBuckets...)
 	}

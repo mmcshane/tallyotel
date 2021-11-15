@@ -18,7 +18,7 @@ func key(name string, kvs []attribute.KeyValue) string {
 	return tally.KeyForPrefixedStringMap(name, bridge.KVsToTags(kvs))
 }
 
-func buckets(metric.Descriptor) tally.Buckets {
+func buckets(sdkapi.Descriptor) tally.Buckets {
 	return tally.MustMakeLinearValueBuckets(0.0, 1.0, 5)
 }
 
@@ -70,7 +70,7 @@ func TestBatchRecord(t *testing.T) {
 func TestUnsupported(t *testing.T) {
 	t.Parallel()
 	m := bridge.NewMeterImpl(tally.NewTestScope("scope", nil), buckets)
-	_, err := m.NewAsyncInstrument(metric.NewDescriptor(
+	_, err := m.NewAsyncInstrument(sdkapi.NewDescriptor(
 		"name",
 		sdkapi.CounterObserverInstrumentKind,
 		number.Int64Kind,
@@ -80,7 +80,7 @@ func TestUnsupported(t *testing.T) {
 	// none of the async instruments are supported
 	require.ErrorIs(t, err, bridge.ErrUnsupportedInstrument)
 
-	_, err = m.NewSyncInstrument(metric.NewDescriptor(
+	_, err = m.NewSyncInstrument(sdkapi.NewDescriptor(
 		"name",
 		sdkapi.CounterInstrumentKind,
 		number.Float64Kind, // only integer histograms are supported
@@ -94,7 +94,7 @@ func TestCounterAliasing(t *testing.T) {
 	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	m := bridge.NewMeterImpl(scope, buckets)
-	i1, err := m.NewSyncInstrument(metric.NewDescriptor(
+	i1, err := m.NewSyncInstrument(sdkapi.NewDescriptor(
 		"name",
 		sdkapi.CounterInstrumentKind,
 		number.Int64Kind,
@@ -102,7 +102,7 @@ func TestCounterAliasing(t *testing.T) {
 		unit.Dimensionless,
 	))
 	require.NoError(t, err)
-	i2, err := m.NewSyncInstrument(metric.NewDescriptor(
+	i2, err := m.NewSyncInstrument(sdkapi.NewDescriptor(
 		"name",
 		sdkapi.CounterInstrumentKind,
 		number.Int64Kind,

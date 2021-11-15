@@ -18,7 +18,7 @@ import (
 var ErrUnsupportedInstrument = errors.New("unsupported instrument")
 
 type (
-	// MeterImpl is an implementation of metric.MeterImpl that uses Tally and
+	// MeterImpl is an implementation of sdkapi.MeterImpl that uses Tally and
 	// wraps a tally.Scope
 	MeterImpl struct {
 		scope   tally.Scope
@@ -63,8 +63,8 @@ func (m *MeterImpl) RecordBatch(
 // (int64 only), Histogram. If a requested instrument is not supported the error
 // returned here will satisfy errors.Is(err, ErrorUnsupportedInstrument).
 func (m *MeterImpl) NewSyncInstrument(
-	desc metric.Descriptor,
-) (metric.SyncImpl, error) {
+	desc sdkapi.Descriptor,
+) (sdkapi.SyncImpl, error) {
 	switch desc.InstrumentKind() {
 	case sdkapi.CounterInstrumentKind,
 		sdkapi.UpDownCounterInstrumentKind:
@@ -78,12 +78,12 @@ func (m *MeterImpl) NewSyncInstrument(
 		ErrUnsupportedInstrument, desc.InstrumentKind(), desc.NumberKind())
 }
 
-// NewAsyncInstrument is required by the metric.MeterImpl interface but no
+// NewAsyncInstrument is required by the sdkapi.MeterImpl interface but no
 // asynchronous instruments are supported because Tally doesn't support them.
 func (m *MeterImpl) NewAsyncInstrument(
-	desc metric.Descriptor,
-	runner metric.AsyncRunner,
-) (metric.AsyncImpl, error) {
+	desc sdkapi.Descriptor,
+	runner sdkapi.AsyncRunner,
+) (sdkapi.AsyncImpl, error) {
 	return nil, fmt.Errorf("%w: %v %v",
 		ErrUnsupportedInstrument, desc.InstrumentKind(), desc.NumberKind())
 }

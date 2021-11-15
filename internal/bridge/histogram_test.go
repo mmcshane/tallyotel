@@ -48,7 +48,7 @@ func TestF64Histogram(t *testing.T) {
 	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
-		metric.NewDescriptor(
+		sdkapi.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
 			number.Float64Kind,
@@ -77,7 +77,7 @@ func TestInt64Histogram(t *testing.T) {
 	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
-		metric.NewDescriptor(
+		sdkapi.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
 			number.Int64Kind,
@@ -104,7 +104,7 @@ func TestDurationHistogram(t *testing.T) {
 	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
-		metric.NewDescriptor(
+		sdkapi.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
 			number.Float64Kind,
@@ -133,7 +133,7 @@ func TestBoundHistogram(t *testing.T) {
 	t.Parallel()
 	scope := tally.NewTestScope("scope", nil)
 	hist := bridge.NewHistogram(
-		metric.NewDescriptor(
+		sdkapi.NewDescriptor(
 			"h",
 			sdkapi.HistogramInstrumentKind,
 			number.Float64Kind,
