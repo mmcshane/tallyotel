@@ -26,13 +26,6 @@ type (
 		initDefault sync.Once
 		defaultCtr  tally.Counter
 	}
-
-	// BoundCounter implements the sdkapi.BoundSyncImpl interface wrapping a
-	// tally.Counter
-	BoundCounter struct {
-		desc sdkapi.Descriptor
-		ctr  tally.Counter
-	}
 )
 
 // NewCounter instantiates a new Counter that uses the provided scope as its
@@ -49,17 +42,6 @@ func (c *Counter) Implementation() interface{} {
 // Descriptor observes this Counter's Descriptor object
 func (c *Counter) Descriptor() sdkapi.Descriptor {
 	return c.desc
-}
-
-// Bind transforms this Counter into a BoundCounter, embedding the provided
-// labels. A new scope is created from the base scope initially provided at
-// construction time.
-func (c *Counter) Bind(labels []attribute.KeyValue) sdkapi.BoundSyncImpl {
-	newScope := c.baseScope.Tagged(KVsToTags(labels))
-	return &BoundCounter{
-		desc: c.desc,
-		ctr:  newScope.Counter(c.desc.Name()),
-	}
 }
 
 // RecordOne increments this counter by the provided value. If this Counter is
@@ -107,19 +89,6 @@ func (c *Counter) RecordOneInScope(
 	}
 	scope.Counter(c.desc.Name()).Inc(value)
 }
-
-// RecordOne records a value into this BoundCounter. If the instrument type is
-// an UpDownCounter then negative values are allowed here.
-func (c *BoundCounter) RecordOne(ctx context.Context, n number.Number) {
-	if err := validateInt64(c.desc.InstrumentKind(), n.AsInt64()); err != nil {
-		otel.Handle(err)
-		return
-	}
-	c.ctr.Inc(int64(n))
-}
-
-// Unbind is a no op. It's not clear what it is supposed to do.
-func (c *BoundCounter) Unbind() {}
 
 func validateInt64(kind sdkapi.InstrumentKind, value int64) error {
 	if kind.Monotonic() && value < 0 {

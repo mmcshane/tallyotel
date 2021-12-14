@@ -56,27 +56,6 @@ func TestTaggedRecord(t *testing.T) {
 	require.EqualValues(t, 1, snap.Value())
 }
 
-func TestBoundCounter(t *testing.T) {
-	// not parallel - uses global error handler
-	scope, unbound := testCounter("scope", "ctr", sdkapi.CounterInstrumentKind)
-	ctr := unbound.Bind([]attribute.KeyValue{attribute.Key("foo").String("bar")})
-
-	withOTELErrorHandler(panicHandler, func() {
-		require.Panics(t, func() {
-			ctr.RecordOne(context.TODO(), number.NewInt64Number(-1))
-		}, "otel counter instruments are monotonic")
-	})
-
-	ctr.RecordOne(context.TODO(), number.NewInt64Number(1))
-
-	_, ok := scope.Snapshot().Counters()["scope.ctr+"]
-	require.False(t, ok, "scope.ctr should not be registered in scope")
-
-	snap, ok := scope.Snapshot().Counters()["scope.ctr+foo=bar"]
-	require.True(t, ok)
-	require.EqualValues(t, 1, snap.Value())
-}
-
 func TestUpDownCounter(t *testing.T) {
 	t.Parallel()
 	scope, ctr := testCounter("scope", "ctr", sdkapi.UpDownCounterInstrumentKind)

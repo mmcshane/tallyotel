@@ -26,14 +26,6 @@ type (
 		initDefault sync.Once
 		defaultHist tally.Histogram
 	}
-
-	// BoundHistogram is a Histogram that has been bound to a set of
-	// attribute.KeyValue labels.
-	BoundHistogram struct {
-		desc   sdkapi.Descriptor
-		hist   tally.Histogram
-		record histRecorder
-	}
 )
 
 // NewHistogram instantiates a new Histogram that uses the proved scope and
@@ -63,18 +55,6 @@ func (h *Histogram) Implementation() interface{} {
 // Descriptor observes this Histogram's Descriptor object
 func (h *Histogram) Descriptor() sdkapi.Descriptor {
 	return h.desc
-}
-
-// Bind transforms this Histogram into a BoundHistogram, embedding the provided
-// labels. A new scope is created from the base scope initially provided at
-// construction time.
-func (h *Histogram) Bind(labels []attribute.KeyValue) sdkapi.BoundSyncImpl {
-	newScope := h.baseScope.Tagged(KVsToTags(labels))
-	return &BoundHistogram{
-		desc:   h.desc,
-		hist:   newScope.Histogram(h.desc.Name(), h.buckets),
-		record: h.record,
-	}
 }
 
 // RecordOne adds a value to this histogram.
@@ -111,14 +91,6 @@ func (h *Histogram) RecordOneInScope(
 	}
 	h.record(scope.Histogram(h.desc.Name(), h.buckets), n, h.desc.NumberKind())
 }
-
-// RecordOne adds a value to this BoundHistogram.
-func (h *BoundHistogram) RecordOne(ctx context.Context, n number.Number) {
-	h.record(h.hist, n, h.desc.NumberKind())
-}
-
-// Unbind is a no op. It's not clear what it is supposed to do.
-func (h *BoundHistogram) Unbind() {}
 
 func recordFloat64(hist tally.Histogram, n number.Number, k number.Kind) {
 	hist.RecordValue(n.CoerceToFloat64(k))

@@ -51,9 +51,9 @@ predictable way. Here are the rules for how scopes are used within `tallyotel`.
    through the Meter name via a separator string (by default: `"."`). The exact
    behavior here can be modified through a client-provided
    `tallyotel.MeterScoper`.
-1. Unbound instruments created by a `metric.Meter` and invoked without any
+1. Instruments created by a `metric.Meter` and invoked without any
    `attribute.KeyValue`s use their parent `metric.Meter`'s scope
-1. Bound instruments and unbound instruments invoked with `attribute.KeyValue`s
-   use a scope that is a sub-scope of their parent Meter's scope, tagged with
-   the appropriate key-values (see `tally.Scope.Tagged`)
+1. Instruments invoked with `attribute.KeyValue`s use a scope that is a
+   sub-scope of their parent Meter's scope, tagged with the appropriate
+   key-values (see `tally.Scope.Tagged`)
 
